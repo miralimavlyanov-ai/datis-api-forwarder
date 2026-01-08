@@ -14,6 +14,18 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install requests
+            - name: Send test message via curl
+        run: |
+          echo "Sending test to Telegram..."
+          curl -s "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+            -X POST \
+            -H "Content-Type: application/json" \
+            -d "{\"chat_id\":\"${CHAT_ID}\",\"text\":\"TEST_FROM_ACTIONS_CURL ✅\"}"
+          echo ""
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+
       - run: python bot.py
         env:
           BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
