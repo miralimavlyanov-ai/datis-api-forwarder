@@ -2,7 +2,10 @@ name: D-ATIS API → Telegram
 
 on:
   schedule:
-    - cron: "3-58/5 * * * *"
+    # Каждые 5 минут с 00 по 50 включительно: 00,05,10,...,50
+    - cron: "0-50/5 * * * *"
+    # Каждую минуту с 51 по 59
+    - cron: "51-59 * * * *"
   workflow_dispatch:
 
 permissions:
