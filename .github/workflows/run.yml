@@ -1,8 +1,8 @@
-name: API → Telegram (only if changed)
+name: D-ATIS API → Telegram
 
 on:
   schedule:
-    - cron: "*/5 * * * *"   # каждые ~5 минут (лимит GitHub)
+    - cron: "3-58/5 * * * *"
   workflow_dispatch:
 
 permissions:
