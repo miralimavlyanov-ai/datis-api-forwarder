@@ -1,6 +1,8 @@
 import os
+import time
 import requests
 import hashlib
+from datetime import datetime, timezone
 
 BOT_TOKEN = os.environ["BOT_TOKEN"]
 CHAT_ID = os.environ["CHAT_ID"]
@@ -26,30 +28,42 @@ def send(text: str) -> None:
         timeout=20
     ).raise_for_status()
 
-def main():
-    # Получаем JSON
-    r = requests.get(API_URL, timeout=20)
+def fetch_json_no_cache():
+    headers = {
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
+    }
+    # уникальный параметр, чтобы пробивать CDN-кэш
+    url = f"{API_URL}?_ts={int(time.time())}"
+    r = requests.get(url, headers=headers, timeout=20)
     r.raise_for_status()
-    data = r.json()
+    return r.json()
 
-    # Твой формат: список с 1 объектом
+def main():
+    data = fetch_json_no_cache()
+
     if not isinstance(data, list) or not data or not isinstance(data[0], dict):
         return
 
-    datis = (data[0].get("datis") or "").strip()
+    item = data[0]
+    datis = (item.get("datis") or "").strip()
     if not datis:
         return
 
-    # Фильтрация/антидубликат строго по datis
     h = hashlib.sha256(datis.encode("utf-8")).hexdigest()
     if h == load_hash():
         return
 
-    # Отправляем строго datis (как ты хочешь)
-    send(datis)
+    polled_utc = datetime.now(timezone.utc).strftime("%H:%MZ %d-%b-%Y")
+    updated_at = (item.get("updatedAt") or "").strip()
 
-    # Запоминаем хэш datis
+    # Сообщение как ты хочешь + одна техстрока (для понимания задержек)
+    msg = datis + f"\n\nPolled (UTC): {polled_utc}"
+    if updated_at:
+        msg += f"\nAPI updatedAt: {updated_at}"
+
+    send(msg)
     save_hash(h)
 
 if __name__ == "__main__":
-    main()
+    main() 
